@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Content Calendar</title>
+<title>Cadence Slate</title>
 <script>window.CC_SUPABASE_URL="https://jebvjfoegjjhvkpzbszz.supabase.co";window.CC_SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYnZqZm9lZ2pqaHZrcHpic3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTY0NDYsImV4cCI6MjA5Nzg3MjQ0Nn0.NiV-ya1pSfTUWbrzMVcit-3-ap_I_Ll8MzcafCCIqMA";</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="theme-color" content="#C25A34" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="Content Calendar" />
+<meta name="apple-mobile-web-app-title" content="Cadence Slate" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
@@ -624,7 +624,7 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
       <div class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
       </div>
-      <div><h1>Content Calendar</h1><p>Plan, produce &amp; schedule</p></div>
+      <div><h1>Cadence Slate</h1><p>Plan, produce &amp; schedule</p></div>
     </div>
     <div class="spacer"></div>
     <div class="month-nav no-print">
@@ -801,7 +801,7 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
 <div id="cc-banner" role="status">Offline: viewing only, edits are paused until you're back online</div>
 <div id="cc-login">
   <form class="cc-card" id="cc-login-form" autocomplete="on">
-    <h1>Content Calendar</h1>
+    <h1>Cadence Slate</h1>
     <div class="cc-sub">Sign in to access your team's calendar.</div>
     <div class="cc-err" id="cc-login-err" role="alert"></div>
     <label for="cc-email">Email</label>
@@ -1532,7 +1532,7 @@ function exportBackup(){
 }
 function restoreBackup(text){
   let payload; try{ payload=JSON.parse(text); }catch(e){ toast("That file isn’t valid JSON","warn"); return; }
-  if(!payload||!Array.isArray(payload.items)){ toast("This doesn’t look like a Content Calendar backup","warn"); return; }
+  if(!payload||!Array.isArray(payload.items)){ toast("This doesn’t look like a Cadence Slate backup","warn"); return; }
   if(!requireOnline()) return;
   const n=payload.items.length;
   if(!confirm("Restore "+n+" item"+(n===1?"":"s")+" from this backup?\n\nThis REPLACES the shared calendar for EVERYONE (content + settings). Tip: Save a backup first if you’re unsure.")) return;
@@ -1563,7 +1563,7 @@ function buildPrintDoc(items,year,month){
   const statCards=[["Total posts",stats.total],["In production",stats.production],["Approved / scheduled",stats.approved],["Published",stats.published]]
     .map(([l,n])=>'<div class="pd-stat"><div class="n">'+n+'</div><div class="l">'+esc(l)+'</div></div>').join("");
   const filteredNote=hasFilters()?' <b>Filtered view</b>: exported with the current filters applied.':'';
-  const cover='<section class="pd-cover"><div class="pd-lockup"><b>Content Calendar</b></div>'+
+  const cover='<section class="pd-cover"><div class="pd-lockup"><b>Cadence Slate</b></div>'+
     '<div><h1 class="pd-cover-title pd-serif">'+esc(monthName)+'<br>'+year+'</h1>'+
     '<p class="pd-cover-sub">Monthly content calendar: production schedule, owners and creative references.'+filteredNote+'</p></div>'+
     '<div><div class="pd-stats">'+statCards+'</div><div class="pd-legend">'+legend+'</div></div></section>';

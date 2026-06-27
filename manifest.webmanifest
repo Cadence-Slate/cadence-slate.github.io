@@ -1,7 +1,7 @@
 {
-  "name": "Content Calendar",
-  "short_name": "Calendar",
-  "description": "Team content calendar: plan, produce & schedule.",
+  "name": "Cadence Slate",
+  "short_name": "Cadence Slate",
+  "description": "Cadence Slate: plan, produce & schedule content.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
