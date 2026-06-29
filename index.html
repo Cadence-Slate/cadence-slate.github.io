@@ -995,6 +995,8 @@ function logEvent(action,target,label){
   if(!cloudOn()) return;
   SB.from("activity").insert({action:action,target:target||null,label:label||null,actor_email:ME_EMAIL||null,actor_name:ME_NAME||null}).then(function(){},function(){});
 }
+const FIELD_LABELS={id:"ID",properti:"Property",tglTayang:"Publish date",platform:"Platform",format:"Format",pilar:"Pillar",brief:"Brief",directive:"Directive",status:"Status",planner:"Planner",fotografer:"Photographer",editor:"Editor",designer:"Designer",dlBrief:"Brief deadline",dlShoot:"Shoot deadline",dlEdit:"Edit deadline",dlApprove:"Approve deadline",linkRaw:"Raw link",linkFinal:"Final link",caption:"Caption",revisi:"Revisions",catatan:"Notes"};
+function diffFields(o,n){ const ch=[]; for(const k in FIELD_LABELS){ if(String(o[k]==null?"":o[k])!==String(n[k]==null?"":n[k])) ch.push(FIELD_LABELS[k]); } return ch.join(", "); }
 function actPhrase(r){
   const who="<b>"+esc(r.actor_name||r.actor_email||"Someone")+"</b>", t=esc(r.target||""), l=esc(r.label||"");
   switch(r.action){
@@ -1017,7 +1019,8 @@ async function loadActivity(){
   const body=$("activityBody");
   if(!SB){ renderActivity([]); return; }
   if(body) body.innerHTML='<p class="thint" style="padding:6px 2px">Loading…</p>';
-  try{ const {data:rows,error}=await SB.from("activity").select("*").order("at",{ascending:false}).limit(150); renderActivity(error?[]:rows); }
+  try{ const cutoff=new Date(Date.now()-92*24*3600*1000).toISOString();
+    const {data:rows,error}=await SB.from("activity").select("*").gte("at",cutoff).order("at",{ascending:false}).limit(500); renderActivity(error?[]:rows); }
   catch(e){ renderActivity([]); }
 }
 function setActDot(v){ const d=$("actDot"); if(d) d.classList.toggle("show",!!v); }
@@ -1485,11 +1488,13 @@ function saveContent(e){
   if(data.some(x=>x.id===rec.id && x.id!==editingId)){ toast("ID “"+rec.id+"” is already used. Pick another one","warn"); $("drawerId").focus(); $("drawerId").select(); return; }
   if(!requireOnline()) return;
   const wasEditing=!!editingId;
+  const prevItem=wasEditing?data.find(x=>x.id===editingId):null;
+  const changedFields=prevItem?diffFields(prevItem,rec):"";
   if(wasEditing){ const i=data.findIndex(x=>x.id===editingId); if(i>=0) data[i]=rec; else data.push(rec); }
   else data.push(rec);
   if(!saveItems()) return;
   if(cloudOn()){
-    if(wasEditing){ cloudUpsertItem(rec,editingId).catch(reportSync); logEvent("updated",rec.id,rec.brief); }
+    if(wasEditing){ cloudUpsertItem(rec,editingId).catch(reportSync); if(changedFields) logEvent("updated",rec.id,changedFields); }
     else { cloudInsertItem(rec).then(()=>logEvent("created",rec.id,rec.brief),e=>{
       if(e&&(e.code==="23505"||/duplicate/i.test(e.message||""))){ data=data.filter(x=>x!==rec); saveItems(); render(); toast("ID “"+rec.id+"” was just taken by someone else. Pick another ID and save again","warn"); }
       else reportSync(e);
