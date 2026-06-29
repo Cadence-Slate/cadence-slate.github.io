@@ -652,6 +652,7 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
         <hr>
         <button id="menuLogout" role="menuitem" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span><span class="mtitle">Log out</span><br><span class="msub" id="ccMenuEmail"></span></span></button>
       </div>
+      <button class="icon-btn" id="activityBtn" aria-label="Activity log" title="Activity log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><path d="M3.05 11a9 9 0 1 1 .5 4M3 4v5h5"/></svg><span class="act-dot" id="actDot" aria-hidden="true"></span></button>
       <button class="btn btn-primary" id="addBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>New content</button>
       <button class="icon-btn" id="menuBtn" aria-label="Menu" title="Menu" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
     </div>
@@ -773,6 +774,15 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
   <div class="settings-body" id="settingsBody"></div>
 </aside>
 
+<!-- ============================ ACTIVITY LOG ============================ -->
+<aside class="settings no-print" id="activity" role="dialog" aria-modal="true" aria-labelledby="activityTitle" aria-hidden="true">
+  <div class="settings-head">
+    <h2 id="activityTitle">Activity log</h2>
+    <button class="icon-btn" id="closeActivity" aria-label="Close activity log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="settings-body" id="activityBody"></div>
+</aside>
+
 <div id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="importFile" accept=".csv,text/csv" style="display:none" />
 <input type="file" id="backupFile" accept=".json,application/json" style="display:none" />
@@ -797,6 +807,15 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
 .menu-user{padding:6px 11px 8px;font-size:12px;color:var(--text-muted)}
 .menu-user b{color:var(--text-strong);font-weight:600}
 .menu hr{border:0;border-top:1px solid var(--glass-border-soft);margin:5px}
+#activityBtn{position:relative}
+.act-dot{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:#C39A2E;display:none;box-shadow:0 0 0 2px var(--glass-bg)}
+.act-dot.show{display:block}
+.act-list{display:flex;flex-direction:column}
+.act-item{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--glass-border-soft)}
+.act-item:last-child{border-bottom:0}
+.act-text{font-size:13.5px;color:var(--text);line-height:1.45}
+.act-text b{color:var(--text-strong);font-weight:600}
+.act-time{font-size:11.5px;color:var(--text-faint);white-space:nowrap;flex:none}
 </style>
 <div id="cc-banner" role="status">Offline: viewing only, edits are paused until you're back online</div>
 <div id="cc-login">
@@ -971,6 +990,40 @@ function ccWhen(iso){ if(!iso) return ""; try{ const d=new Date(iso); return d.t
 function ccDisplayName(u){ const m=(u&&u.user_metadata)||{}; return m.display_name||m.full_name||m.name||""; }
 function ccSyncMenu(){ const u=$("ccMenuUser"); if(u) u.innerHTML="Signed in as <b>"+esc(ME_NAME||ME_EMAIL||"-")+"</b>"; const em=$("ccMenuEmail"); if(em) em.textContent=ME_EMAIL||""; }
 
+/* ---- activity log: append-only record of who changed what, when ---- */
+function logEvent(action,target,label){
+  if(!cloudOn()) return;
+  SB.from("activity").insert({action:action,target:target||null,label:label||null,actor_email:ME_EMAIL||null,actor_name:ME_NAME||null}).then(function(){},function(){});
+}
+function actPhrase(r){
+  const who="<b>"+esc(r.actor_name||r.actor_email||"Someone")+"</b>", t=esc(r.target||""), l=esc(r.label||"");
+  switch(r.action){
+    case "created": return who+" created "+t+(l?" — "+l:"");
+    case "updated": return who+" updated "+t+(l?" — "+l:"");
+    case "deleted": return who+" deleted "+t;
+    case "ref-added": return who+" added a "+(l||"reference")+" to "+t;
+    case "ref-removed": return who+" removed a reference from "+t;
+    case "setting-added": return who+" added "+t+(l?" &ldquo;"+l+"&rdquo;":"");
+    case "setting-removed": return who+" removed "+t+(l?" &ldquo;"+l+"&rdquo;":"");
+    default: return who+" "+esc(r.action)+" "+t;
+  }
+}
+function renderActivity(rows){
+  const body=$("activityBody"); if(!body) return;
+  if(!rows||!rows.length){ body.innerHTML='<p class="thint" style="padding:6px 2px">No activity yet.</p>'; return; }
+  body.innerHTML='<div class="act-list">'+rows.map(function(r){ return '<div class="act-item"><div class="act-text">'+actPhrase(r)+'</div><div class="act-time">'+esc(ccWhen(r.at))+'</div></div>'; }).join("")+'</div>';
+}
+async function loadActivity(){
+  const body=$("activityBody");
+  if(!SB){ renderActivity([]); return; }
+  if(body) body.innerHTML='<p class="thint" style="padding:6px 2px">Loading…</p>';
+  try{ const {data:rows,error}=await SB.from("activity").select("*").order("at",{ascending:false}).limit(150); renderActivity(error?[]:rows); }
+  catch(e){ renderActivity([]); }
+}
+function setActDot(v){ const d=$("actDot"); if(d) d.classList.toggle("show",!!v); }
+function openActivity(){ const t=document.activeElement; closeDrawer(); $("appMenu").classList.remove("open"); lastTrigger=t; setActDot(false); openSurface($("activity")); loadActivity(); setTimeout(function(){ try{$("closeActivity").focus();}catch(e){} },140); }
+function closeActivity(){ const el=$("activity"); if(!el.classList.contains("show")) return; el.classList.remove("show"); el.setAttribute("aria-hidden","true"); if(!$("drawer").classList.contains("is-open")) $("scrim").classList.remove("is-open"); restoreFocus(); }
+
 /* realtime: reflect other people's changes live */
 function startRealtime(){
   if(!SB) return;
@@ -985,6 +1038,10 @@ function startRealtime(){
     .on("postgres_changes",{event:"*",schema:"public",table:"taxonomy"},async()=>{
       try{ const tx=await SB.from("taxonomy").select("data").eq("id",1).maybeSingle();
         if(tx.data&&tx.data.data){ adoptTax(tx.data.data); try{localStorage.setItem(TAX_KEY,JSON.stringify(TAX));}catch(e){} applyTaxonomy(); } }catch(e){}
+    })
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"activity"},function(p){
+      if($("activity").classList.contains("show")) loadActivity();
+      else if(p.new && p.new.actor_email!==ME_EMAIL) setActDot(true);
     })
     .subscribe();
 }
@@ -1096,7 +1153,7 @@ function taxAdd(kind,rawName,color){
   if(exists){ toast("“"+name+"” already exists","warn"); return false; }
   if(kind==="properties") TAX.properties.push({name,color:color||PROP_PALETTE[TAX.properties.length%PROP_PALETTE.length]});
   else TAX[kind].push(name);
-  saveTax(); applyTaxonomy(); toast("Added “"+name+"”","ok"); return true;
+  saveTax(); applyTaxonomy(); logEvent("setting-added",kind,name); toast("Added “"+name+"”","ok"); return true;
 }
 function taxRemove(kind,i){
   if(!requireOnline()) return;
@@ -1105,7 +1162,7 @@ function taxRemove(kind,i){
   const n=countUsage(kind,name);
   if(n>0 && !confirm("“"+name+"” is used by "+n+" item"+(n>1?"s":"")+". Removing it from this menu will NOT change those items; they keep this value. Remove it from the list?")) return;
   if(kind==="properties") TAX.properties.splice(i,1); else TAX[kind].splice(i,1);
-  saveTax(); applyTaxonomy(); toast("Removed “"+name+"”","ok");
+  saveTax(); applyTaxonomy(); logEvent("setting-removed",kind,name); toast("Removed “"+name+"”","ok");
 }
 function taxSetColor(i,color){ if(!requireOnline()) return; TAX.properties[i].color=color; saveTax(); render(); }
 
@@ -1213,16 +1270,18 @@ async function addImageRef(file,externalUrl){
   const up=await uploadRefImage(file);
   getRefs(currentItem).push({id:uid(),kind:"image",thumb:up.url,path:up.path,url:(externalUrl||"").trim()||null,caption:"",addedAt:Date.now()});
   persistRefs();
+  if(data.indexOf(currentItem)>=0) logEvent("ref-added",currentItem.id,"image");
 }
 async function addVideoRef(link,posterFile){
   if(!requireOnline()) return;
   let thumb=null,path=null; if(posterFile){ const up=await uploadRefImage(posterFile); thumb=up.url; path=up.path; }
   getRefs(currentItem).push({id:uid(),kind:"video",thumb,path,url:(link||"").trim()||null,caption:"",addedAt:Date.now()});
   persistRefs();
+  if(data.indexOf(currentItem)>=0) logEvent("ref-added",currentItem.id,"video");
 }
-function addLinkRef(link){ if(!requireOnline()) return; getRefs(currentItem).push({id:uid(),kind:"link",thumb:null,url:(link||"").trim()||null,caption:"",addedAt:Date.now()}); persistRefs(); }
+function addLinkRef(link){ if(!requireOnline()) return; getRefs(currentItem).push({id:uid(),kind:"link",thumb:null,url:(link||"").trim()||null,caption:"",addedAt:Date.now()}); persistRefs(); if(data.indexOf(currentItem)>=0) logEvent("ref-added",currentItem.id,"link"); }
 function updateRefCaption(id,caption){ const r=getRefs(currentItem).find(x=>x.id===id); if(r){ r.caption=caption; if(data.indexOf(currentItem)>=0){ saveItems(); if(cloudOn()) cloudUpsertItem(currentItem).catch(reportSync); } } }
-function removeRef(id){ const r=getRefs(currentItem).find(x=>x.id===id); if(r&&r.path&&cloudOn()) SB.storage.from(REFS_BUCKET).remove([r.path]).catch(()=>{}); currentItem.refs=getRefs(currentItem).filter(x=>x.id!==id); persistRefs(); }
+function removeRef(id){ const r=getRefs(currentItem).find(x=>x.id===id); if(r&&r.path&&cloudOn()) SB.storage.from(REFS_BUCKET).remove([r.path]).catch(()=>{}); currentItem.refs=getRefs(currentItem).filter(x=>x.id!==id); persistRefs(); if(data.indexOf(currentItem)>=0) logEvent("ref-removed",currentItem.id,r?r.kind:""); }
 
 const PLAY_SVG='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
 function renderRefsManager(){
@@ -1394,7 +1453,7 @@ function openDrawer(id,presetDate){
 function openSurface(el){
   $("scrim").classList.add("is-open");
   el.hidden=false; el.classList.remove("is-closing");
-  if(el.id==="settings"){ el.classList.add("show"); el.setAttribute("aria-hidden","false"); return; }
+  if(el.id==="settings"||el.id==="activity"){ el.classList.add("show"); el.setAttribute("aria-hidden","false"); return; }
   requestAnimationFrame(()=>{ el.classList.add("is-open"); });
   el.setAttribute("aria-hidden","false");
 }
@@ -1429,10 +1488,13 @@ function saveContent(e){
   if(wasEditing){ const i=data.findIndex(x=>x.id===editingId); if(i>=0) data[i]=rec; else data.push(rec); }
   else data.push(rec);
   if(!saveItems()) return;
-  if(cloudOn()){ (wasEditing?cloudUpsertItem(rec,editingId):cloudInsertItem(rec)).catch(e=>{
-    if(e&&(e.code==="23505"||/duplicate/i.test(e.message||""))){ data=data.filter(x=>x!==rec); saveItems(); render(); toast("ID “"+rec.id+"” was just taken by someone else. Pick another ID and save again","warn"); }
-    else reportSync(e);
-  }); }
+  if(cloudOn()){
+    if(wasEditing){ cloudUpsertItem(rec,editingId).catch(reportSync); logEvent("updated",rec.id,rec.brief); }
+    else { cloudInsertItem(rec).then(()=>logEvent("created",rec.id,rec.brief),e=>{
+      if(e&&(e.code==="23505"||/duplicate/i.test(e.message||""))){ data=data.filter(x=>x!==rec); saveItems(); render(); toast("ID “"+rec.id+"” was just taken by someone else. Pick another ID and save again","warn"); }
+      else reportSync(e);
+    }); }
+  }
   const d=parseD(rec.tglTayang); if(d) cursor=new Date(d.getFullYear(),d.getMonth(),1);
   closeDrawer(); render(); toast(wasEditing?"Content updated":"Content saved","ok");
 }
@@ -1443,6 +1505,7 @@ function deleteContent(){
   const delId=editingId;
   data=data.filter(x=>x.id!==delId); saveItems();
   if(cloudOn()) cloudDeleteItem(delId).catch(reportSync);
+  logEvent("deleted",delId,"");
   closeDrawer(); render(); toast("Content deleted","ok");
 }
 
@@ -1663,9 +1726,10 @@ function bind(){
   $("viewCal").onclick=()=>setView("cal"); $("viewList").onclick=()=>setView("list");
   $("addBtn").onclick=()=>openDrawer(null,null);
   $("closeDrawer").onclick=closeDrawer; $("cancelBtn").onclick=closeDrawer;
-  $("scrim").onclick=()=>{ closeDrawer(); closeSettings(); };
+  $("scrim").onclick=()=>{ closeDrawer(); closeSettings(); closeActivity(); };
   $("saveBtn").onclick=saveContent; $("contentForm").onsubmit=saveContent; $("deleteBtn").onclick=deleteContent;
   $("closeSettings").onclick=closeSettings;
+  $("activityBtn").onclick=openActivity; $("closeActivity").onclick=closeActivity;
 
   ["search","fProperti","fPlatform","fPilar","fStatus"].forEach(id=>$(id).addEventListener("input",render));
   $("clearFilters").onclick=()=>{ $("search").value=""; ["fProperti","fPlatform","fPilar","fStatus"].forEach(id=>$(id).value=""); render(); };
@@ -1711,11 +1775,12 @@ function bind(){
   document.addEventListener("keydown",e=>{
     if(e.key==="Escape"){
       if($("appMenu").classList.contains("open")){ $("appMenu").classList.remove("open"); $("menuBtn").setAttribute("aria-expanded","false"); $("menuBtn").focus(); return; }
+      if($("activity").classList.contains("show")) return closeActivity();
       if($("settings").classList.contains("show")) return closeSettings();
       if($("drawer").classList.contains("is-open")) return closeDrawer();
     }
     const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
-    const surfaceOpen=$("drawer").classList.contains("is-open")||$("settings").classList.contains("show");
+    const surfaceOpen=$("drawer").classList.contains("is-open")||$("settings").classList.contains("show")||$("activity").classList.contains("show");
     if(typing||surfaceOpen) return;
     if(e.key==="n"){ e.preventDefault(); openDrawer(null,null); }
     if(e.key==="ArrowLeft") navMonth("prev");
@@ -1724,6 +1789,7 @@ function bind(){
 
   $("drawer").addEventListener("keydown",e=>trapFocus(e,$("drawer")));
   $("settings").addEventListener("keydown",e=>trapFocus(e,$("settings")));
+  $("activity").addEventListener("keydown",e=>trapFocus(e,$("activity")));
 }
 
 /* ============================================================================
