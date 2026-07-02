@@ -896,7 +896,7 @@ const SB=(window.supabase&&window.supabase.createClient)
   ? window.supabase.createClient(window.CC_SUPABASE_URL,window.CC_SUPABASE_ANON,{auth:{persistSession:true,autoRefreshToken:true}})
   : null;
 const REFS_BUCKET="refs";
-let SESSION=null, ME=null, ME_EMAIL=null, ME_NAME=null, online=navigator.onLine, CLOUD_READY=false, REALTIME_STARTED=false;
+let SESSION=null, ME=null, ME_EMAIL=null, ME_NAME=null, online=navigator.onLine, CLOUD_READY=false, REALTIME_STARTED=false, AUTH_ID;
 
 function cloudOn(){ return !!(SB && CLOUD_READY && online && SESSION); }
 function isNet(e){ return !online || (e && /fetch|network|Failed to fetch|timeout/i.test(e.message||"")); }
@@ -1063,6 +1063,9 @@ async function ccLogin(e){
 }
 function showLogin(v){ const el=$("cc-login"); if(!el) return; el.hidden=!v; if(v) setTimeout(()=>{ try{$("cc-email").focus();}catch(e){} },80); }
 async function handleSession(session){
+  const sid=session?session.user.id:null;
+  if(sid!==undefined && sid===AUTH_ID){ if(session) SESSION=session; return; } // same user re-emitted (tab refocus): skip the full reload
+  AUTH_ID=sid;
   SESSION=session; ME=session?session.user.id:null; ME_EMAIL=session?session.user.email:null; ME_NAME=session?ccDisplayName(session.user):null;
   if(!session){ CLOUD_READY=false; try{closeSettings();closeDrawer();}catch(e){} showLogin(true); return; }
   showLogin(false); setOnline(navigator.onLine);
@@ -1078,7 +1081,11 @@ async function startApp(){
   window.addEventListener("offline",()=>setOnline(false));
   try{
     const {data:{session}}=await SB.auth.getSession();
-    SB.auth.onAuthStateChange((_ev,s)=>{ handleSession(s); });
+    SB.auth.onAuthStateChange((ev,s)=>{
+      if(ev==="TOKEN_REFRESHED"){ if(s) SESSION=s; return; }        // background token renewal: no UI work
+      if(ev==="USER_UPDATED"&&s){ SESSION=s; ME_EMAIL=s.user.email; ME_NAME=ccDisplayName(s.user); return; }
+      handleSession(s);                                              // real sign-in/out; duplicates are skipped inside
+    });
     await handleSession(session);
   }catch(e){ console.error(e); showLogin(true); }
 }
@@ -1130,10 +1137,11 @@ function fillStatusSelect(el,withAll,keepVal){
   if(keepVal!=null) el.value=keepVal;
 }
 function applyTaxonomy(){
-  fillSelect(fProperti,propNames(),"All properties");
-  fillSelect(fPlatform,TAX.platforms,"All platforms");
-  fillSelect(fPilar,TAX.pillars,"All pillars");
-  fillStatusSelect(fStatus,"All statuses");
+  // rebuild the dropdowns but KEEP the user's current filter choices (they were being reset)
+  fillSelect(fProperti,propNames(),"All properties",propNames().includes(fProperti.value)?fProperti.value:"");
+  fillSelect(fPlatform,TAX.platforms,"All platforms",TAX.platforms.includes(fPlatform.value)?fPlatform.value:"");
+  fillSelect(fPilar,TAX.pillars,"All pillars",TAX.pillars.includes(fPilar.value)?fPilar.value:"");
+  fillStatusSelect(fStatus,"All statuses",fStatus.value||"");
   fillSelect(iProperti,propNames(),"Select property…",$("iProperti").value||"");
   fillSelect(iPlatform,TAX.platforms,"Select platform…",$("iPlatform").value||"");
   fillSelect(iFormat,TAX.formats,"Select format…",$("iFormat").value||"");
