@@ -1027,16 +1027,44 @@ function setActDot(v){ const d=$("actDot"); if(d) d.classList.toggle("show",!!v)
 function openActivity(){ const t=document.activeElement; closeDrawer(); $("appMenu").classList.remove("open"); lastTrigger=t; setActDot(false); openSurface($("activity")); loadActivity(); setTimeout(function(){ try{$("closeActivity").focus();}catch(e){} },140); }
 function closeActivity(){ const el=$("activity"); if(!el.classList.contains("show")) return; el.classList.remove("show"); el.setAttribute("aria-hidden","true"); if(!$("drawer").classList.contains("is-open")) $("scrim").classList.remove("is-open"); restoreFocus(); }
 
+/* quiet re-sync: pull fresh data and re-render ONLY if something actually changed.
+   Realtime events have no replay: anything sent while the tab slept or the socket
+   was down is lost forever, so we catch up on refocus / reconnect / back-online. */
+let SYNCING=false, resyncTimer=null, RT_FIRST_SUB=true;
+function requestResync(delay){ clearTimeout(resyncTimer); resyncTimer=setTimeout(resyncQuiet,delay==null?400:delay); }
+function renderAfterRemote(){ if($("drawer").classList.contains("is-open")){ if(view==="cal") renderCalendarOnly(); else renderList(); } else render(); }
+async function resyncQuiet(){
+  if(SYNCING||!SB||!SESSION||!online||!CLOUD_READY) return;
+  SYNCING=true;
+  try{
+    const [it,tx]=await Promise.all([
+      SB.from("items").select("*"),
+      SB.from("taxonomy").select("data").eq("id",1).maybeSingle()
+    ]);
+    const norm=a=>JSON.stringify(a.slice().sort((x,y)=>String(x.id).localeCompare(String(y.id))));
+    if(!it.error&&Array.isArray(it.data)){
+      const fresh=it.data.map(fromRow);
+      if(norm(fresh)!==norm(data)){ data=fresh; saveItems(); renderAfterRemote(); }
+    }
+    if(tx&&tx.data&&tx.data.data&&typeof tx.data.data==="object"){
+      const before=JSON.stringify(TAX); adoptTax(tx.data.data);
+      if(JSON.stringify(TAX)!==before){ try{localStorage.setItem(TAX_KEY,JSON.stringify(TAX));}catch(e){} applyTaxonomy(); }
+    }
+  }catch(e){}
+  SYNCING=false;
+}
+
 /* realtime: reflect other people's changes live */
 function startRealtime(){
   if(!SB) return;
   SB.channel("cc-sync")
     .on("postgres_changes",{event:"*",schema:"public",table:"items"},p=>{
-      const cid=(p.new&&p.new.content_id)||(p.old&&p.old.content_id); if(!cid) return;
+      const cid=(p.new&&p.new.content_id)||(p.old&&p.old.content_id);
+      if(!cid){ requestResync(300); return; } // DELETE without replica-identity payload: re-sync instead of silently ignoring
       if(p.eventType==="DELETE"){ data=data.filter(x=>x.id!==cid); }
       else { const o=fromRow(p.new), i=data.findIndex(x=>x.id===cid); if(i>=0) data[i]=o; else data.push(o); }
       saveItems();
-      if($("drawer").classList.contains("is-open")) renderCalendarOnly(); else render();
+      renderAfterRemote();
     })
     .on("postgres_changes",{event:"*",schema:"public",table:"taxonomy"},async()=>{
       try{ const tx=await SB.from("taxonomy").select("data").eq("id",1).maybeSingle();
@@ -1046,7 +1074,7 @@ function startRealtime(){
       if($("activity").classList.contains("show")) loadActivity();
       else if(p.new && p.new.actor_email!==ME_EMAIL) setActDot(true);
     })
-    .subscribe();
+    .subscribe(function(st){ if(st==="SUBSCRIBED"){ if(!RT_FIRST_SUB) requestResync(0); RT_FIRST_SUB=false; } }); // after a reconnect, catch up on anything missed
 }
 
 /* auth + boot */
@@ -1077,8 +1105,9 @@ async function startApp(){
   applyTaxonomy(); // render from local cache first (instant; may be empty on a fresh device)
   $("cc-login-form").addEventListener("submit",ccLogin);
   if(!SB){ showLogin(true); const er=$("cc-login-err"); if(er) er.textContent="Couldn't load the app. Check your connection and reload."; return; }
-  window.addEventListener("online",()=>{ setOnline(true); if(SESSION) cloudFetchAll().then(()=>applyTaxonomy()).catch(()=>{}); });
+  window.addEventListener("online",()=>{ setOnline(true); requestResync(0); });
   window.addEventListener("offline",()=>setOnline(false));
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") requestResync(250); }); // catch up after the tab slept
   try{
     const {data:{session}}=await SB.auth.getSession();
     SB.auth.onAuthStateChange((ev,s)=>{
