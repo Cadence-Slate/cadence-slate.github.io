@@ -1036,7 +1036,7 @@ function closeActivity(){ const el=$("activity"); if(!el.classList.contains("sho
    was down is lost forever, so we catch up on refocus / reconnect / back-online. */
 let SYNCING=false, resyncTimer=null, RT_FIRST_SUB=true;
 function requestResync(delay){ clearTimeout(resyncTimer); resyncTimer=setTimeout(resyncQuiet,delay==null?400:delay); }
-function renderAfterRemote(){ if($("drawer").classList.contains("is-open")){ if(view==="cal") renderCalendarOnly(); else renderList(); } else render(); }
+function renderAfterRemote(){ if($("drawer").classList.contains("is-open")){ renderStats(); renderLegend(); if(view==="cal") renderCalendarOnly(); else renderList(); } else render(); }
 async function resyncQuiet(){
   if(SYNCING||!SB||!SESSION||!online||!CLOUD_READY) return;
   SYNCING=true;
@@ -1337,8 +1337,8 @@ async function addVideoRef(link,posterFile){
   if(data.indexOf(currentItem)>=0) logEvent("ref-added",currentItem.id,"video");
 }
 function addLinkRef(link){ if(!requireOnline()) return; getRefs(currentItem).push({id:uid(),kind:"link",thumb:null,url:(link||"").trim()||null,caption:"",addedAt:Date.now()}); persistRefs(); if(data.indexOf(currentItem)>=0) logEvent("ref-added",currentItem.id,"link"); }
-function updateRefCaption(id,caption){ const r=getRefs(currentItem).find(x=>x.id===id); if(r){ r.caption=caption; if(data.indexOf(currentItem)>=0){ saveItems(); if(cloudOn()) cloudUpsertItem(currentItem).catch(reportSync); } } }
-function removeRef(id){ const r=getRefs(currentItem).find(x=>x.id===id); if(r&&r.path&&cloudOn()) SB.storage.from(REFS_BUCKET).remove([r.path]).catch(()=>{}); currentItem.refs=getRefs(currentItem).filter(x=>x.id!==id); persistRefs(); if(data.indexOf(currentItem)>=0) logEvent("ref-removed",currentItem.id,r?r.kind:""); }
+function updateRefCaption(id,caption){ if(!requireOnline()) return; const r=getRefs(currentItem).find(x=>x.id===id); if(r){ r.caption=caption; if(data.indexOf(currentItem)>=0){ saveItems(); if(cloudOn()) cloudUpsertItem(currentItem).catch(reportSync); } } }
+function removeRef(id){ if(!requireOnline()) return; const r=getRefs(currentItem).find(x=>x.id===id); if(r&&r.path&&cloudOn()) SB.storage.from(REFS_BUCKET).remove([r.path]).catch(()=>{}); currentItem.refs=getRefs(currentItem).filter(x=>x.id!==id); persistRefs(); if(data.indexOf(currentItem)>=0) logEvent("ref-removed",currentItem.id,r?r.kind:""); }
 
 const PLAY_SVG='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
 function renderRefsManager(){
@@ -1840,7 +1840,7 @@ function bind(){
       if($("drawer").classList.contains("is-open")) return closeDrawer();
     }
     const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
-    const surfaceOpen=$("drawer").classList.contains("is-open")||$("settings").classList.contains("show")||$("activity").classList.contains("show");
+    const surfaceOpen=$("drawer").classList.contains("is-open")||$("settings").classList.contains("show")||$("activity").classList.contains("show")||!$("cc-login").hidden;
     if(typing||surfaceOpen) return;
     if(e.key==="n"){ e.preventDefault(); openDrawer(null,null); }
     if(e.key==="ArrowLeft") navMonth("prev");
