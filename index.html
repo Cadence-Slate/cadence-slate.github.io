@@ -945,7 +945,11 @@ async function cloudFetchAll(){
 }
 async function cloudInsertItem(o){ const {error}=await SB.from("items").insert(toRow(o)); if(error) throw error; }
 async function cloudUpsertItem(o,prevId){
-  if(prevId&&prevId!==o.id){ const {error}=await SB.from("items").update(toRow(o)).eq("content_id",prevId); if(error) throw error; }
+  if(prevId&&prevId!==o.id){
+    const {data:upd,error}=await SB.from("items").update(toRow(o)).eq("content_id",prevId).select("content_id");
+    if(error) throw error;
+    if(!upd||!upd.length){ const {error:e2}=await SB.from("items").upsert(toRow(o),{onConflict:"content_id"}); if(e2) throw e2; } // old row gone (deleted/never synced): create it instead of silently dropping the rename
+  }
   else { const {error}=await SB.from("items").upsert(toRow(o),{onConflict:"content_id"}); if(error) throw error; }
 }
 async function cloudDeleteItem(id){ const {error}=await SB.from("items").delete().eq("content_id",id); if(error) throw error; }
@@ -1041,10 +1045,18 @@ async function resyncQuiet(){
       SB.from("items").select("*"),
       SB.from("taxonomy").select("data").eq("id",1).maybeSingle()
     ]);
-    const norm=a=>JSON.stringify(a.slice().sort((x,y)=>String(x.id).localeCompare(String(y.id))));
+    // compare CONTENT fields only: local items and cloud rows differ in key order and
+    // sync metadata, so raw JSON comparison would flag a change on every check
+    const canonRef=r=>JSON.stringify(Object.keys(r).sort().map(k=>[k,r[k]]));
+    const canon=o=>FIELD_KEYS.map(k=>String(o[k]==null?"":o[k])).join("\u0001")+"|"+(Array.isArray(o.refs)?o.refs.map(canonRef).join(","):"");
+    const norm=a=>a.map(canon).sort().join("\n");
     if(!it.error&&Array.isArray(it.data)){
       const fresh=it.data.map(fromRow);
-      if(norm(fresh)!==norm(data)){ data=fresh; saveItems(); renderAfterRemote(); }
+      if(norm(fresh)!==norm(data)){
+        data=fresh;
+        if(editingId){ const cur=data.find(x=>x.id===editingId); if(cur){ currentItem=cur; renderRefsManager(); } }
+        saveItems(); renderAfterRemote();
+      }
     }
     if(tx&&tx.data&&tx.data.data&&typeof tx.data.data==="object"){
       const before=JSON.stringify(TAX); adoptTax(tx.data.data);
@@ -1062,7 +1074,8 @@ function startRealtime(){
       const cid=(p.new&&p.new.content_id)||(p.old&&p.old.content_id);
       if(!cid){ requestResync(300); return; } // DELETE without replica-identity payload: re-sync instead of silently ignoring
       if(p.eventType==="DELETE"){ data=data.filter(x=>x.id!==cid); }
-      else { const o=fromRow(p.new), i=data.findIndex(x=>x.id===cid); if(i>=0) data[i]=o; else data.push(o); }
+      else { const o=fromRow(p.new), i=data.findIndex(x=>x.id===cid); if(i>=0) data[i]=o; else data.push(o);
+        if(editingId===cid){ currentItem=o; renderRefsManager(); } } // keep the open drawer's refs wired to the live object
       saveItems();
       renderAfterRemote();
     })
@@ -1095,7 +1108,7 @@ async function handleSession(session){
   if(sid!==undefined && sid===AUTH_ID){ if(session) SESSION=session; return; } // same user re-emitted (tab refocus): skip the full reload
   AUTH_ID=sid;
   SESSION=session; ME=session?session.user.id:null; ME_EMAIL=session?session.user.email:null; ME_NAME=session?ccDisplayName(session.user):null;
-  if(!session){ CLOUD_READY=false; try{closeSettings();closeDrawer();}catch(e){} showLogin(true); return; }
+  if(!session){ CLOUD_READY=false; try{closeSettings();closeDrawer();closeActivity();setActDot(false);}catch(e){} showLogin(true); return; }
   showLogin(false); setOnline(navigator.onLine);
   if(online){ try{ await cloudFetchAll(); }catch(e){ if(isNet(e)) setOnline(false); else toast("Couldn't load data from the cloud: "+((e&&e.message)||e),"warn"); } }
   CLOUD_READY=true; applyTaxonomy();
@@ -1306,15 +1319,19 @@ function persistRefs(){
   renderRefsManager(); renderCalendarOnly();
 }
 async function addImageRef(file,externalUrl){
-  if(!requireOnline()) return;
+  if(!requireOnline()||!currentItem) return;
+  const wantId=currentItem.id;
   const up=await uploadRefImage(file);
+  if(!currentItem||currentItem.id!==wantId){ SB.storage.from(REFS_BUCKET).remove([up.path]).catch(()=>{}); return; } // drawer closed/switched during upload: don't attach to the wrong item or crash
   getRefs(currentItem).push({id:uid(),kind:"image",thumb:up.url,path:up.path,url:(externalUrl||"").trim()||null,caption:"",addedAt:Date.now()});
   persistRefs();
   if(data.indexOf(currentItem)>=0) logEvent("ref-added",currentItem.id,"image");
 }
 async function addVideoRef(link,posterFile){
-  if(!requireOnline()) return;
-  let thumb=null,path=null; if(posterFile){ const up=await uploadRefImage(posterFile); thumb=up.url; path=up.path; }
+  if(!requireOnline()||!currentItem) return;
+  const wantId=currentItem.id;
+  let thumb=null,path=null;
+  if(posterFile){ const up=await uploadRefImage(posterFile); if(!currentItem||currentItem.id!==wantId){ SB.storage.from(REFS_BUCKET).remove([up.path]).catch(()=>{}); return; } thumb=up.url; path=up.path; }
   getRefs(currentItem).push({id:uid(),kind:"video",thumb,path,url:(link||"").trim()||null,caption:"",addedAt:Date.now()});
   persistRefs();
   if(data.indexOf(currentItem)>=0) logEvent("ref-added",currentItem.id,"video");
@@ -1545,8 +1562,9 @@ function deleteContent(){
   if(!requireOnline()) return;
   if(!confirm("Delete content "+editingId+"? This cannot be undone.")) return;
   const delId=editingId;
+  const delPaths=(currentItem&&Array.isArray(currentItem.refs)?currentItem.refs:[]).map(r=>r.path).filter(Boolean);
   data=data.filter(x=>x.id!==delId); saveItems();
-  if(cloudOn()) cloudDeleteItem(delId).catch(reportSync);
+  if(cloudOn()){ cloudDeleteItem(delId).catch(reportSync); if(delPaths.length) SB.storage.from(REFS_BUCKET).remove(delPaths).catch(()=>{}); }
   logEvent("deleted",delId,"");
   closeDrawer(); render(); toast("Content deleted","ok");
 }
