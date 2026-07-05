@@ -433,13 +433,13 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
 .video-form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 .video-form input{flex:1 1 200px;min-height:40px;border:1px solid var(--glass-border-soft);background:var(--glass-bg);
   color:var(--text-strong);border-radius:var(--r-sm);padding:0 11px;outline:none}
-.refs-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+.refs-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 .ref-tile{position:relative;border-radius:var(--r-sm);overflow:hidden;background:var(--surface-3);
   border:1px solid var(--glass-border);box-shadow:0 3px 12px rgba(0,0,0,.16);
   animation:ref-in var(--dur-3) var(--ease-out-spring) both}
 @keyframes ref-in{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
 .ref-thumb{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--surface-2)}
-.ref-thumb.is-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 8px;text-align:center}
+.ref-thumb.is-empty{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 8px 10px;text-align:center}
 .ref-ico{display:grid;place-items:center;color:var(--accent)}
 .ref-ico svg{width:22px;height:22px}
 .ref-host{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 11px/1.25 var(--font-ui);color:var(--text-muted);letter-spacing:.2px}
@@ -1343,7 +1343,7 @@ async function addVideoRef(link,posterFile){
 }
 function addLinkRef(link){ if(!requireOnline()) return; getRefs(currentItem).push({id:uid(),kind:"link",thumb:null,url:(link||"").trim()||null,caption:"",addedAt:Date.now()}); persistRefs(); if(data.indexOf(currentItem)>=0) logEvent("ref-added",currentItem.id,"link"); }
 function updateRefCaption(id,caption){ if(!requireOnline()) return; const r=getRefs(currentItem).find(x=>x.id===id); if(r){ r.caption=caption; if(data.indexOf(currentItem)>=0){ saveItems(); if(cloudOn()) cloudUpsertItem(currentItem).catch(reportSync); } } }
-function removeRef(id){ if(!requireOnline()) return; const r=getRefs(currentItem).find(x=>x.id===id); if(r&&r.path&&cloudOn()) SB.storage.from(REFS_BUCKET).remove([r.path]).catch(()=>{}); currentItem.refs=getRefs(currentItem).filter(x=>x.id!==id); persistRefs(); if(data.indexOf(currentItem)>=0) logEvent("ref-removed",currentItem.id,r?r.kind:""); }
+function removeRef(id){ if(!requireOnline()) return; if(!confirm("Remove this reference?")) return; const r=getRefs(currentItem).find(x=>x.id===id); if(r&&r.path&&cloudOn()) SB.storage.from(REFS_BUCKET).remove([r.path]).catch(()=>{}); currentItem.refs=getRefs(currentItem).filter(x=>x.id!==id); persistRefs(); if(data.indexOf(currentItem)>=0) logEvent("ref-removed",currentItem.id,r?r.kind:""); }
 
 const PLAY_SVG='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
 const LINK_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
