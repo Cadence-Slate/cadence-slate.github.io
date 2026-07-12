@@ -531,6 +531,7 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
   .pd-card,.pd-legend,.pd-cover{break-inside:avoid;page-break-inside:avoid}
   /* each property group starts on a fresh page (except the first, which follows the
      section head) — a group can span pages, so never force break-inside on it */
+  .pd-detail-divider{page-break-after:always}
   .pd-dategroup + .pd-dategroup{page-break-before:always}
   #print-doc .pd-dateline{page-break-after:avoid}
   .pd-section{page-break-before:always}
@@ -546,7 +547,7 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
   #print-doc .pd-grid-sec .pd-date{font-size:11px;margin-bottom:2px}
   #print-doc .pd-grid-sec .pd-pill{font-size:9px;line-height:1.22;padding:3px 5px;margin-bottom:3px}
   /* cell height follows the month's week count (94px was tuned for 6-row months only) */
-  #print-doc .pd-grid-sec .pd-grid[data-rows="5"] .pd-cell{height:114px}
+  #print-doc .pd-grid-sec .pd-grid[data-rows="5"] .pd-cell{height:110px}
   #print-doc .pd-grid-sec .pd-grid[data-rows="4"] .pd-cell{height:142px}
   /* keep pill heights predictable so nothing is sliced mid-pill: one-line top row */
   #print-doc .pd-grid-sec .pd-pill-top{flex-wrap:nowrap}
@@ -575,6 +576,9 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
 #print-doc .pd-legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:18px;padding-top:14px;border-top:1px solid var(--pd-line)}
 #print-doc .pd-legend .li{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--pd-muted)}
 #print-doc .pd-swatch{width:12px;height:12px;border-radius:3px}
+#print-doc .pd-detail-divider{min-height:170mm;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:14mm;box-sizing:border-box;
+  background:radial-gradient(120% 90% at 12% 0%,var(--pd-divino-soft) 0%,transparent 55%),var(--pd-paper);border:1px solid var(--pd-line)}
+#print-doc .pd-detail-divider h1{font-size:56px;line-height:1.05;margin:8px 0 0;font-weight:700}
 #print-doc .pd-section-head{display:flex;align-items:baseline;gap:14px;margin:0 0 14px;padding-bottom:10px;border-bottom:2px solid var(--pd-ink)}
 #print-doc .pd-section-head h2{font-family:var(--font-display);font-size:30px;font-weight:700;margin:0}
 #print-doc .pd-section-head .k{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--pd-muted)}
@@ -1747,7 +1751,7 @@ function pdCard(o,brandrowText,withCaption){
   const si=statusInfo(o.status), bk=brandKey(o.properti), bdot=propColor(o.properti);
   const owners=[["Planner",o.planner],["Photographer",o.fotografer],["Editor",o.editor],["Designer",o.designer]].filter(([,v])=>v&&v!=="-").map(([k,v])=>'<span><b>'+k+':</b> '+esc(v)+'</span>').join("");
   const refs=getRefs(o), media=refs.filter(r=>r.thumb), linkRefs=refs.filter(r=>!r.thumb&&r.url);
-  const shown=media.slice(0,6), extraMedia=media.length-shown.length;
+  const shown=media.slice(0,4), extraMedia=media.length-shown.length; // 4 max (2x2) so a card can never outgrow one page
   const gallery=shown.length?'<div class="pd-gallery" data-n="'+(shown.length===1?1:2)+'">'+shown.map(r=>
       '<figure class="pd-ref'+(r.kind==="video"?" is-video":"")+'"><div class="frame"><img src="'+r.thumb+'" alt="'+esc(r.caption||o.brief||"reference")+'"></div>'+
       ((r.caption||r.url)?'<figcaption class="pd-refcap">'+esc(r.caption||"")+(r.url?(r.caption?' · ':'')+esc(r.url):'')+'</figcaption>':"")+'</figure>').join("")+
@@ -1808,7 +1812,7 @@ function buildPrintDoc(items,year,month){
     const cards=byProp[prop].slice().sort((a,b)=>(a.tglTayang||"").localeCompare(b.tglTayang||"")).map(o=>pdCard(o,prettyDate(o.tglTayang),false)).join("");
     groups+='<div class="pd-dategroup"><div class="pd-dateline pd-serif">'+esc(prop)+'</div><div class="pd-cards">'+cards+'</div></div>';
   });
-  const detail='<section class="pd-section"><div class="pd-section-head"><h2 class="pd-serif">Content detail</h2><span class="k">Briefs &amp; references</span></div>'+(groups||'<p class="pd-cover-sub">No content scheduled for this month.</p>')+'</section>';
+  const detail='<section class="pd-section"><div class="pd-detail-divider"><div class="pd-lockup"><b>Content Detail</b></div><h1 class="pd-serif">Briefs &amp;<br>references</h1><p class="pd-cover-sub">'+inMonth.length+' post'+(inMonth.length===1?'':'s')+' across '+usedProps.length+' propert'+(usedProps.length===1?'y':'ies')+' this month, one chapter per property.</p></div>'+(groups||'<p class="pd-cover-sub">No content scheduled for this month.</p>')+'</section>';
   return cover+grid+detail;
 }
 function exportPDF(){
