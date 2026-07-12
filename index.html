@@ -529,6 +529,10 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
   @page{size:A4 landscape;margin:12mm}
   #print-doc,#print-doc *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
   .pd-card,.pd-legend,.pd-cover{break-inside:avoid}
+  /* each property group starts on a fresh page (except the first, which follows the
+     section head) — a group can span pages, so never force break-inside on it */
+  .pd-dategroup + .pd-dategroup{page-break-before:always}
+  #print-doc .pd-dateline{page-break-after:avoid}
   .pd-section{page-break-before:always}
   .pd-cover{page-break-after:always}
   /* Keep the whole month grid on a single page: compact cells in print only.
@@ -585,9 +589,9 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
 #print-doc .pd-pill .brief.l1{-webkit-line-clamp:1}
 #print-doc .pd-pill .brief.l3{-webkit-line-clamp:3}
 #print-doc .pd-more{font-size:9px;font-weight:700;color:var(--pd-muted);padding:0 2px}
-#print-doc .pd-dategroup{margin-bottom:18px;break-inside:avoid}
+#print-doc .pd-dategroup{margin-bottom:18px}
 #print-doc .pd-dateline{font-family:var(--font-display);font-size:20px;font-weight:700;margin:0 0 8px;padding-bottom:4px;border-bottom:1px solid var(--pd-line)}
-#print-doc .pd-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+#print-doc .pd-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;align-items:start}
 #print-doc .pd-card{border:1px solid var(--pd-line);border-radius:14px;overflow:hidden;background:#fff;border-top:4px solid var(--pd-divino)}
 #print-doc .pd-card[data-brand="kanzen"]{border-top-color:var(--pd-kanzen)}
 #print-doc .pd-card .body{padding:12px 14px}
