@@ -528,7 +528,7 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
   #print-doc{display:block !important}
   @page{size:A4 landscape;margin:12mm}
   #print-doc,#print-doc *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
-  .pd-card,.pd-legend,.pd-cover{break-inside:avoid}
+  .pd-card,.pd-legend,.pd-cover{break-inside:avoid;page-break-inside:avoid}
   /* each property group starts on a fresh page (except the first, which follows the
      section head) — a group can span pages, so never force break-inside on it */
   .pd-dategroup + .pd-dategroup{page-break-before:always}
@@ -545,6 +545,16 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
   #print-doc .pd-grid-sec .pd-minilegend{margin:0 0 8px}
   #print-doc .pd-grid-sec .pd-date{font-size:11px;margin-bottom:2px}
   #print-doc .pd-grid-sec .pd-pill{font-size:9px;line-height:1.22;padding:3px 5px;margin-bottom:3px}
+  /* cell height follows the month's week count (94px was tuned for 6-row months only) */
+  #print-doc .pd-grid-sec .pd-grid[data-rows="5"] .pd-cell{height:114px}
+  #print-doc .pd-grid-sec .pd-grid[data-rows="4"] .pd-cell{height:142px}
+  /* keep pill heights predictable so nothing is sliced mid-pill: one-line top row */
+  #print-doc .pd-grid-sec .pd-pill-top{flex-wrap:nowrap}
+  #print-doc .pd-grid-sec .pd-pill .prop{white-space:nowrap}
+  #print-doc .pd-grid-sec .pd-pill .plat{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #print-doc .pd-grid-sec .pd-pill .pstat{flex:none}
+  /* tight 6-row months: two-post days drop their one-line briefs so 3 chips always fit */
+  #print-doc .pd-grid-sec .pd-grid[data-rows="6"] .pd-pill .brief.l1{display:none}
 }
 #print-doc{--pd-ink:#1A1614;--pd-muted:#5A524C;--pd-line:#E3DBD2;--pd-paper:#FFFDF9;
   --pd-divino:#C8862B;--pd-divino-soft:#FBF1DF;--pd-kanzen:#9E1B1B;--pd-kanzen-soft:#F7E5E2;
@@ -1789,7 +1799,7 @@ function buildPrintDoc(items,year,month){
   const propLegend=usedProps.map(p=>'<span class="li"><span class="pd-swatch" style="background:'+propColor(p)+'"></span>'+esc(propShort(p))+(propShort(p)!==p?' = '+esc(p):'')+'</span>').join("");
   const statLegend=STATUS.filter(s=>inMonth.some(o=>o.status===s.value)).map(s=>'<span class="li"><span class="pd-swatch" style="background:'+s.color+'"></span>'+esc(s.short)+'</span>').join("");
   const miniLegend=(propLegend?'<div class="pd-minilegend"><b>Property</b>'+propLegend+'</div>':"")+(statLegend?'<div class="pd-minilegend"><b>Status</b>'+statLegend+'</div>':"");
-  const grid='<section class="pd-section pd-grid-sec"><div class="pd-section-head"><h2 class="pd-serif">'+esc(monthName)+' at a glance</h2><span class="k">Month grid</span></div>'+miniLegend+'<div class="pd-grid">'+dow+cells+'</div></section>';
+  const grid='<section class="pd-section pd-grid-sec"><div class="pd-section-head"><h2 class="pd-serif">'+esc(monthName)+' at a glance</h2><span class="k">Month grid</span></div>'+miniLegend+'<div class="pd-grid" data-rows="'+(totalCells/7)+'">'+dow+cells+'</div></section>';
 
   const byProp={};
   inMonth.forEach(o=>{ const k=(o.properti||"").trim()||"(no property)"; (byProp[k]=byProp[k]||[]).push(o); });
