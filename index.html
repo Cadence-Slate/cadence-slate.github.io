@@ -612,6 +612,30 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
 #print-doc .pd-ref.is-video .frame::after{content:'';position:absolute;inset:0;margin:auto;width:0;height:0;border-style:solid;border-width:8px 0 8px 13px;border-color:transparent transparent transparent #fff;filter:drop-shadow(0 0 2px rgba(0,0,0,.6))}
 #print-doc .pd-refcap{font-size:9.5px;color:var(--pd-muted);margin-top:3px;line-height:1.35;word-break:break-word}
 #print-doc .pd-refmore{align-self:center;font-size:10px;font-weight:700;color:var(--pd-muted);text-align:center}
+/* weekly rundown (agenda layout, distinct from the monthly deck) */
+#print-doc .pd-wk-summary{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin:0 0 16px;font-size:12px;color:var(--pd-muted)}
+#print-doc .pd-wk-summary .li{display:flex;align-items:center;gap:6px}
+#print-doc .pd-wk-total b{font-family:var(--font-display);font-size:20px;color:var(--pd-ink);margin-right:5px}
+#print-doc .pd-wk-day{margin-bottom:14px}
+#print-doc .pd-wk-dayhead{display:flex;align-items:baseline;gap:10px;padding:6px 12px;background:#F6F2EA;border:1px solid var(--pd-line);border-radius:8px;margin-bottom:8px;break-after:avoid}
+#print-doc .pd-wk-dayname{font-family:var(--font-display);font-size:16px;font-weight:700}
+#print-doc .pd-wk-date{font-size:11px;color:var(--pd-muted);font-weight:600}
+#print-doc .pd-wk-count{margin-left:auto;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--pd-muted);font-weight:700}
+#print-doc .pd-wk-day.is-empty .pd-wk-dayhead{background:transparent;border-style:dashed}
+#print-doc .pd-wrow{display:grid;grid-template-columns:170px 1fr 170px;gap:14px;padding:10px 12px;border:1px solid var(--pd-line);border-left:4px solid var(--pd-divino);border-radius:10px;background:#fff;margin-bottom:8px;break-inside:avoid}
+#print-doc .pd-wrow[data-brand="kanzen"]{border-left-color:var(--pd-kanzen)}
+#print-doc .pd-wmeta .meta{font-size:10.5px;color:var(--pd-muted);margin-top:3px}
+#print-doc .pd-wrow .pd-badge{margin-top:7px;font-size:10px;padding:2px 8px}
+#print-doc .pd-wowners{font-size:10px;color:var(--pd-muted);margin-top:7px;line-height:1.55}
+#print-doc .pd-wowners b{color:var(--pd-ink);font-weight:600}
+#print-doc .pd-wbrief{font-size:12.5px;font-weight:600;color:var(--pd-ink)}
+#print-doc .pd-wrow .pd-directive{margin-top:6px;font-size:11px}
+#print-doc .pd-wrow .pd-capblock{margin-top:6px;background:#fff;border:1px solid #DCD5C8;border-left:3px solid var(--pd-ink);font-size:11.5px}
+#print-doc .pd-wmedia{display:flex;flex-direction:column;gap:6px}
+#print-doc .pd-wmedia .frame{aspect-ratio:16/10;border-radius:6px;overflow:hidden;background:#EFE9DF;border:1px solid var(--pd-line)}
+#print-doc .pd-wmedia img{width:100%;height:100%;object-fit:cover;display:block}
+#print-doc .pd-wmore{font-size:9px;font-weight:700;color:var(--pd-muted);text-align:center}
+#print-doc .pd-wlinks{font-size:9.5px;color:var(--pd-muted);word-break:break-all;line-height:1.4}
 #print-doc .pd-links{padding:8px 12px;background:#FAF7F2;border-top:1px solid var(--pd-line);font-size:9.5px;color:var(--pd-muted);line-height:1.5;word-break:break-all}
 #print-doc .pd-links b{color:var(--pd-ink)}
 #print-doc .pd-links a{color:#1A5FB4;text-decoration:none}
@@ -1787,18 +1811,38 @@ const DOW_LONG=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","S
 function buildPrintDocWeek(items,wsStr){
   const we=addDays(wsStr,6);
   const inWeek=items.filter(o=>o.tglTayang&&o.tglTayang>=wsStr&&o.tglTayang<=we);
-  const filteredNote=hasFilters()?' <b>Filtered view</b>: exported with the current filters applied.':'';
-  let groups="";
+  const filteredNote=hasFilters()?'<span><b>Filtered view</b>: current filters applied.</span>':'';
+  const propCounts={}; inWeek.forEach(o=>{ const k=(o.properti||"").trim()||"(no property)"; propCounts[k]=(propCounts[k]||0)+1; });
+  const propChips=Object.keys(propCounts).sort().map(p=>'<span class="li"><span class="pd-swatch" style="background:'+propColor(p)+'"></span>'+esc(p)+' · '+propCounts[p]+'</span>').join("");
+  const summary='<div class="pd-wk-summary"><span class="pd-wk-total"><b>'+inWeek.length+'</b>post'+(inWeek.length===1?'':'s')+' this week</span>'+propChips+filteredNote+'</div>';
+  let days="";
   for(let i=0;i<7;i++){
     const dstr=addDays(wsStr,i);
     const dayItems=inWeek.filter(o=>o.tglTayang===dstr);
-    if(!dayItems.length) continue;
-    const cards=dayItems.map(o=>pdCard(o,(o.properti||"(no property)"),true)).join("");
-    groups+='<div class="pd-dategroup"><div class="pd-dateline pd-serif">'+esc(DOW_LONG[i])+' · '+esc(prettyDate(dstr))+'</div><div class="pd-cards">'+cards+'</div></div>';
+    const head='<div class="pd-wk-dayhead"><span class="pd-wk-dayname">'+esc(DOW_LONG[i])+'</span><span class="pd-wk-date">'+esc(prettyDate(dstr))+'</span><span class="pd-wk-count">'+(dayItems.length?dayItems.length+' post'+(dayItems.length>1?'s':''):'No posts')+'</span></div>';
+    const rows=dayItems.map(o=>{
+      const si=statusInfo(o.status), bk=brandKey(o.properti), bdot=propColor(o.properti);
+      const owners=[["Planner",o.planner],["Photo",o.fotografer],["Editor",o.editor],["Design",o.designer]].filter(([,v])=>v&&v!=="-").map(([k,v])=>'<b>'+k+':</b> '+esc(v)).join("<br>");
+      const allMedia=getRefs(o).filter(r=>r.thumb), media=allMedia.slice(0,3), extra=allMedia.length-media.length;
+      const linkRefs=getRefs(o).filter(r=>!r.thumb&&r.url);
+      const mediaHtml=media.map(r=>'<div class="frame"><img src="'+r.thumb+'" alt="'+esc(r.caption||o.brief||"reference")+'"></div>').join("")+
+        (extra>0?'<div class="pd-wmore">+'+extra+' more</div>':"")+
+        (linkRefs.length?'<div class="pd-wlinks">'+linkRefs.map(r=>esc(r.caption||r.url)).join("<br>")+'</div>':"");
+      return '<div class="pd-wrow" data-brand="'+bk+'">'+
+        '<div class="pd-wmeta"><div class="pd-brandrow"><span class="dot" style="background:'+bdot+'"></span>'+esc(o.properti||"(no property)")+'</div>'+
+        '<div class="meta">'+esc(o.platform||"")+(o.format?' &middot; '+esc(o.format):"")+'</div>'+
+        (o.pilar?'<div class="meta">'+esc(o.pilar)+'</div>':"")+
+        '<span class="pd-badge" style="color:'+si.color+'"><span class="dot"></span>'+esc(si.en)+'</span>'+
+        (owners?'<div class="pd-wowners">'+owners+'</div>':"")+'</div>'+
+        '<div class="pd-wbody"><div class="pd-wbrief">'+esc(o.brief||"")+'</div>'+
+        (o.directive?'<div class="pd-directive"><span class="pd-dlabel">Directive</span>'+esc(o.directive)+'</div>':"")+
+        '<div class="pd-capblock"><span class="pd-dlabel">Caption</span>'+(o.caption?esc(o.caption):'<i>No caption yet</i>')+'</div>'+
+        '</div>'+
+        '<div class="pd-wmedia">'+mediaHtml+'</div></div>';
+    }).join("");
+    days+='<div class="pd-wk-day'+(dayItems.length?'':' is-empty')+'">'+head+rows+'</div>';
   }
-  return '<section class="pd-section"><div class="pd-section-head"><h2 class="pd-serif">Weekly rundown</h2><span class="k">'+esc(prettyDate(wsStr))+' – '+esc(prettyDate(we))+'</span></div>'+
-    '<p class="pd-cover-sub">'+inWeek.length+' post'+(inWeek.length===1?'':'s')+' scheduled this week. Captions are included, ready to publish.'+filteredNote+'</p>'+
-    (groups||'<p class="pd-cover-sub">No content scheduled for this week.</p>')+'</section>';
+  return '<section class="pd-section"><div class="pd-section-head"><h2 class="pd-serif">Weekly rundown</h2><span class="k">'+esc(prettyDate(wsStr))+' – '+esc(prettyDate(we))+'</span></div>'+summary+days+'</section>';
 }
 function exportPDFWeek(wsStr){
   const host=$("print-doc"); host.innerHTML=buildPrintDocWeek(applyFilters(data),wsStr);
