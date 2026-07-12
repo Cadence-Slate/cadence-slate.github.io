@@ -600,6 +600,7 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
 #print-doc .pd-directive{font-size:11.5px;color:var(--pd-ink);margin-top:8px;padding:7px 9px;background:var(--pd-divino-soft);border-radius:8px;border-left:3px solid var(--pd-divino)}
 #print-doc .pd-card[data-brand="kanzen"] .pd-directive{background:var(--pd-kanzen-soft);border-left-color:var(--pd-kanzen)}
 #print-doc .pd-dlabel{display:block;font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pd-muted);margin-bottom:2px}
+#print-doc .pd-capblock{font-size:11.5px;color:var(--pd-ink);margin-top:8px;padding:7px 9px;background:#F3F1EC;border:1px solid #E4DFD5;border-radius:8px;white-space:pre-wrap}
 #print-doc .pd-owners{font-size:11px;color:var(--pd-muted);margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 12px}
 #print-doc .pd-owners b{color:var(--pd-ink);font-weight:600}
 #print-doc .pd-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:10px;background:#FAF7F2;border-top:1px solid var(--pd-line)}
@@ -643,7 +644,8 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
         <button id="menuTheme" role="menuitem" type="button"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg><span><span class="mtitle">Night mode</span><br><span class="msub">Switch light / dark theme</span></span></button>
         <button id="menuSettings" role="menuitem" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.91 1.7 1.7 0 0 0 4.26 7l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6h.09A1.7 1.7 0 0 0 10 3v-.09a2 2 0 0 1 4 0V3a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09A1.7 1.7 0 0 0 21 10h.09a2 2 0 0 1 0 4H21a1.7 1.7 0 0 0-1.56 1z"/></svg><span><span class="mtitle">Settings</span><br><span class="msub">Properties, platforms, team &amp; pillars</span></span></button>
         <hr>
-        <button data-export="pdf" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span><span class="mtitle">Export PDF</span><br><span class="msub">Presentation-ready calendar + references</span></span></button>
+        <button data-export="pdf" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span><span class="mtitle">Export PDF · Month</span><br><span class="msub">Presentation deck: cover, grid &amp; briefs by property</span></span></button>
+        <button data-export="pdfweek" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h4M7 17h7"/></svg><span><span class="mtitle">Export PDF · Week</span><br><span class="msub">Day-by-day rundown, captions included</span></span></button>
         <hr>
         <button data-export="csv" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg><span><span class="mtitle">Export CSV</span><br><span class="msub">For Excel / Sheets, imports into the tracker</span></span></button>
         <button data-export="xlsx" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8l8 8M16 8l-8 8"/></svg><span><span class="mtitle">Export Excel (.xlsx)</span><br><span class="msub">Formatted workbook (needs internet)</span></span></button>
@@ -786,6 +788,16 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
   <div class="settings-body" id="activityBody"></div>
 </aside>
 
+<!-- ============================ WEEK PICKER (weekly PDF) ============================ -->
+<div id="weekPick" class="weekpick no-print" hidden>
+  <div class="weekpick-card" role="dialog" aria-modal="true" aria-labelledby="weekPickTitle">
+    <h3 id="weekPickTitle">Export week as PDF</h3>
+    <p class="wp-hint">Pick a week of <span id="weekPickMonth"></span>. Cards include captions.</p>
+    <div id="weekPickList"></div>
+    <button type="button" class="btn btn-ghost" id="weekPickCancel">Cancel</button>
+  </div>
+</div>
+
 <div id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="importFile" accept=".csv,text/csv" style="display:none" />
 <input type="file" id="backupFile" accept=".json,application/json" style="display:none" />
@@ -821,6 +833,16 @@ option.is-orphan{font-style:italic;color:var(--text-faint)}
 .act-time{font-size:11.5px;color:var(--text-faint);white-space:nowrap;flex:none}
 .ref-tile.openable{cursor:pointer}
 .ref-tile.openable:hover .ref-thumb{filter:brightness(1.08)}
+.weekpick{position:fixed;inset:0;z-index:900;display:grid;place-items:center;background:rgba(20,15,10,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.weekpick[hidden]{display:none}
+.weekpick-card{width:min(400px,92vw);max-height:80vh;overflow:auto;background:var(--glass-bg-raised);border:1px solid var(--glass-border);border-radius:var(--r-lg);box-shadow:var(--glass-shadow-lg);padding:20px}
+.weekpick-card h3{margin:0 0 4px;font-family:var(--font-display);font-size:19px;color:var(--text-strong)}
+.wp-hint{margin:0 0 14px;font-size:12.5px;color:var(--text-muted)}
+.weekpick-opt{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 12px;margin:0 0 8px;border-radius:var(--r-sm);border:1px solid var(--glass-border-soft);background:var(--glass-bg);color:var(--text-strong);font:600 13.5px/1.2 var(--font-ui);cursor:pointer}
+.weekpick-opt:hover{background:var(--glass-bg-strong);border-color:var(--border-strong)}
+.weekpick-opt:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}
+.wp-count{font:600 11px/1 var(--font-ui);color:var(--text-muted);white-space:nowrap}
+#weekPickCancel{width:100%;margin-top:4px;justify-content:center}
 </style>
 <div id="cc-banner" role="status">Offline: viewing only, edits are paused until you're back online</div>
 <div id="cc-login">
@@ -1683,6 +1705,26 @@ function restoreBackup(text){
 /* ============================================================================
    PDF: dedicated print document
    ============================================================================ */
+function pdCard(o,brandrowText,withCaption){
+  const si=statusInfo(o.status), bk=brandKey(o.properti), bdot=propColor(o.properti);
+  const owners=[["Planner",o.planner],["Photographer",o.fotografer],["Editor",o.editor],["Designer",o.designer]].filter(([,v])=>v&&v!=="-").map(([k,v])=>'<span><b>'+k+':</b> '+esc(v)+'</span>').join("");
+  const refs=getRefs(o), media=refs.filter(r=>r.thumb), linkRefs=refs.filter(r=>!r.thumb&&r.url);
+  const shown=media.slice(0,6), extraMedia=media.length-shown.length;
+  const gallery=shown.length?'<div class="pd-gallery" data-n="'+(shown.length===1?1:2)+'">'+shown.map(r=>
+      '<figure class="pd-ref'+(r.kind==="video"?" is-video":"")+'"><div class="frame"><img src="'+r.thumb+'" alt="'+esc(r.caption||o.brief||"reference")+'"></div>'+
+      ((r.caption||r.url)?'<figcaption class="pd-refcap">'+esc(r.caption||"")+(r.url?(r.caption?' · ':'')+esc(r.url):'')+'</figcaption>':"")+'</figure>').join("")+
+    (extraMedia>0?'<div class="pd-refmore">+'+extraMedia+' more reference'+(extraMedia>1?"s":"")+'</div>':"")+'</div>':"";
+  const linksHtml=linkRefs.length?'<div class="pd-links"><b>Reference links:</b> '+linkRefs.map(r=>'<a href="'+esc(r.url)+'">'+esc(r.caption||r.url)+'</a>').join(' &nbsp;·&nbsp; ')+'</div>':"";
+  return '<div class="pd-card" data-brand="'+bk+'" style="border-top-color:'+bdot+'"><div class="body">'+
+    '<div class="pd-brandrow"><span class="dot" style="background:'+bdot+'"></span>'+esc(brandrowText)+'</div>'+
+    '<div class="meta">'+esc(o.platform||"")+(o.format?' &middot; '+esc(o.format):"")+(o.pilar?' &middot; '+esc(o.pilar):"")+'</div>'+
+    '<span class="pd-badge" style="color:'+si.color+'"><span class="dot"></span>'+esc(si.en)+'</span>'+
+    '<div class="pd-brief">'+esc(o.brief||"")+'</div>'+
+    (o.directive?'<div class="pd-directive"><span class="pd-dlabel">Directive</span>'+esc(o.directive)+'</div>':"")+
+    (withCaption?'<div class="pd-capblock"><span class="pd-dlabel">Caption</span>'+(o.caption?esc(o.caption):'<i>No caption yet</i>')+'</div>':"")+
+    (owners?'<div class="pd-owners">'+owners+'</div>':"")+
+    '</div>'+gallery+linksHtml+'</div>';
+}
 function buildPrintDoc(items,year,month){
   const monthName=MONTHS[month];
   const inMonth=items.filter(o=>{ const d=parseD(o.tglTayang); return d&&d.getFullYear()===year&&d.getMonth()===month; }).sort((a,b)=>(a.tglTayang||"").localeCompare(b.tglTayang||""));
@@ -1725,23 +1767,7 @@ function buildPrintDoc(items,year,month){
   inMonth.forEach(o=>{ const k=(o.properti||"").trim()||"(no property)"; (byProp[k]=byProp[k]||[]).push(o); });
   let groups="";
   Object.keys(byProp).sort((a,b)=>a.localeCompare(b)).forEach(prop=>{
-    const cards=byProp[prop].slice().sort((a,b)=>(a.tglTayang||"").localeCompare(b.tglTayang||"")).map(o=>{ const si=statusInfo(o.status), bk=brandKey(o.properti), bdot=propColor(o.properti);
-      const owners=[["Planner",o.planner],["Photographer",o.fotografer],["Editor",o.editor],["Designer",o.designer]].filter(([,v])=>v&&v!=="-").map(([k,v])=>'<span><b>'+k+':</b> '+esc(v)+'</span>').join("");
-      const refs=getRefs(o), media=refs.filter(r=>r.thumb), linkRefs=refs.filter(r=>!r.thumb&&r.url);
-      const shown=media.slice(0,6), extraMedia=media.length-shown.length;
-      const gallery=shown.length?'<div class="pd-gallery" data-n="'+(shown.length===1?1:2)+'">'+shown.map(r=>
-          '<figure class="pd-ref'+(r.kind==="video"?" is-video":"")+'"><div class="frame"><img src="'+r.thumb+'" alt="'+esc(r.caption||o.brief||"reference")+'"></div>'+
-          ((r.caption||r.url)?'<figcaption class="pd-refcap">'+esc(r.caption||"")+(r.url?(r.caption?' · ':'')+esc(r.url):'')+'</figcaption>':"")+'</figure>').join("")+
-        (extraMedia>0?'<div class="pd-refmore">+'+extraMedia+' more reference'+(extraMedia>1?"s":"")+'</div>':"")+'</div>':"";
-      const linksHtml=linkRefs.length?'<div class="pd-links"><b>Reference links:</b> '+linkRefs.map(r=>'<a href="'+esc(r.url)+'">'+esc(r.caption||r.url)+'</a>').join(' &nbsp;·&nbsp; ')+'</div>':"";
-      return '<div class="pd-card" data-brand="'+bk+'" style="border-top-color:'+bdot+'"><div class="body">'+
-        '<div class="pd-brandrow"><span class="dot" style="background:'+bdot+'"></span>'+esc(prettyDate(o.tglTayang))+'</div>'+
-        '<div class="meta">'+esc(o.platform||"")+(o.format?' &middot; '+esc(o.format):"")+(o.pilar?' &middot; '+esc(o.pilar):"")+'</div>'+
-        '<span class="pd-badge" style="color:'+si.color+'"><span class="dot"></span>'+esc(si.en)+'</span>'+
-        '<div class="pd-brief">'+esc(o.brief||"")+'</div>'+
-        (o.directive?'<div class="pd-directive"><span class="pd-dlabel">Directive</span>'+esc(o.directive)+'</div>':"")+
-        (owners?'<div class="pd-owners">'+owners+'</div>':"")+
-        '</div>'+gallery+linksHtml+'</div>'; }).join("");
+    const cards=byProp[prop].slice().sort((a,b)=>(a.tglTayang||"").localeCompare(b.tglTayang||"")).map(o=>pdCard(o,prettyDate(o.tglTayang),false)).join("");
     groups+='<div class="pd-dategroup"><div class="pd-dateline pd-serif">'+esc(prop)+'</div><div class="pd-cards">'+cards+'</div></div>';
   });
   const detail='<section class="pd-section"><div class="pd-section-head"><h2 class="pd-serif">Content detail</h2><span class="k">Briefs &amp; references</span></div>'+(groups||'<p class="pd-cover-sub">No content scheduled for this month.</p>')+'</section>';
@@ -1755,6 +1781,47 @@ function exportPDF(){
   ccWaitImages(host,8000).then(()=>window.print()); setTimeout(cleanup,60000);
   toast(hasFilters()?"Exporting the FILTERED view. Hit Reset first if you want the full month":"Choose “Save as PDF”, Landscape. Cover, calendar & references included","ok");
 }
+
+/* ---- weekly PDF: per-day rundown with captions ---- */
+const DOW_LONG=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+function buildPrintDocWeek(items,wsStr){
+  const we=addDays(wsStr,6);
+  const inWeek=items.filter(o=>o.tglTayang&&o.tglTayang>=wsStr&&o.tglTayang<=we);
+  const filteredNote=hasFilters()?' <b>Filtered view</b>: exported with the current filters applied.':'';
+  let groups="";
+  for(let i=0;i<7;i++){
+    const dstr=addDays(wsStr,i);
+    const dayItems=inWeek.filter(o=>o.tglTayang===dstr);
+    if(!dayItems.length) continue;
+    const cards=dayItems.map(o=>pdCard(o,(o.properti||"(no property)"),true)).join("");
+    groups+='<div class="pd-dategroup"><div class="pd-dateline pd-serif">'+esc(DOW_LONG[i])+' · '+esc(prettyDate(dstr))+'</div><div class="pd-cards">'+cards+'</div></div>';
+  }
+  return '<section class="pd-section"><div class="pd-section-head"><h2 class="pd-serif">Weekly rundown</h2><span class="k">'+esc(prettyDate(wsStr))+' – '+esc(prettyDate(we))+'</span></div>'+
+    '<p class="pd-cover-sub">'+inWeek.length+' post'+(inWeek.length===1?'':'s')+' scheduled this week. Captions are included, ready to publish.'+filteredNote+'</p>'+
+    (groups||'<p class="pd-cover-sub">No content scheduled for this week.</p>')+'</section>';
+}
+function exportPDFWeek(wsStr){
+  const host=$("print-doc"); host.innerHTML=buildPrintDocWeek(applyFilters(data),wsStr);
+  let done=false; const cleanup=()=>{ if(done) return; done=true; host.innerHTML=""; window.removeEventListener("afterprint",cleanup); };
+  window.addEventListener("afterprint",cleanup);
+  ccWaitImages(host,8000).then(()=>window.print()); setTimeout(cleanup,60000);
+  toast("Weekly PDF: choose “Save as PDF”, Landscape. Captions included","ok");
+}
+function mondayOf(d){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
+function openWeekPick(){
+  lastTrigger=document.activeElement;
+  const y=cursor.getFullYear(),m=cursor.getMonth();
+  $("weekPickMonth").textContent=MONTHS[m]+" "+y;
+  const items=applyFilters(data), last=new Date(y,m+1,0), opts=[];
+  for(const d=mondayOf(new Date(y,m,1)); d<=last; d.setDate(d.getDate()+7)){
+    const ws=fmt(d), we=addDays(ws,6);
+    opts.push({ws,we,n:items.filter(o=>o.tglTayang&&o.tglTayang>=ws&&o.tglTayang<=we).length});
+  }
+  $("weekPickList").innerHTML=opts.map(w=>'<button type="button" class="weekpick-opt" data-ws="'+w.ws+'"><span>'+esc(prettyDate(w.ws))+' – '+esc(prettyDate(w.we))+'</span><span class="wp-count">'+w.n+' post'+(w.n===1?'':'s')+'</span></button>').join("");
+  $("weekPick").hidden=false;
+  const f=$("weekPickList").querySelector("button"); if(f) setTimeout(()=>{ try{f.focus();}catch(e){} },60);
+}
+function closeWeekPick(){ const el=$("weekPick"); if(el.hidden) return; el.hidden=true; restoreFocus(); }
 
 /* ============================================================================
    VIEW SWITCH
@@ -1799,6 +1866,9 @@ function bind(){
   $("saveBtn").onclick=saveContent; $("contentForm").onsubmit=saveContent; $("deleteBtn").onclick=deleteContent;
   $("closeSettings").onclick=closeSettings;
   $("activityBtn").onclick=openActivity; $("closeActivity").onclick=closeActivity;
+  $("weekPickCancel").onclick=closeWeekPick;
+  $("weekPick").addEventListener("click",e=>{ if(e.target.id==="weekPick") closeWeekPick(); });
+  $("weekPickList").addEventListener("click",e=>{ const b=e.target.closest("[data-ws]"); if(!b) return; const ws=b.dataset.ws; closeWeekPick(); exportPDFWeek(ws); });
 
   ["search","fProperti","fPlatform","fPilar","fStatus"].forEach(id=>$(id).addEventListener("input",render));
   $("clearFilters").onclick=()=>{ $("search").value=""; ["fProperti","fPlatform","fPilar","fStatus"].forEach(id=>$(id).value=""); render(); };
@@ -1811,7 +1881,7 @@ function bind(){
   $("menuSettings").onclick=()=>{ menu.classList.remove("open"); $("menuBtn").setAttribute("aria-expanded","false"); openSettings(); };
   $("menuLogout").onclick=async()=>{ menu.classList.remove("open"); $("menuBtn").setAttribute("aria-expanded","false"); if(SB){ try{ await SB.auth.signOut(); }catch(e){} } };
   menu.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>{ menu.classList.remove("open"); $("menuBtn").setAttribute("aria-expanded","false"); const t=b.dataset.export;
-    if(t==="pdf") exportPDF(); else if(t==="csv") exportCSV(); else if(t==="xlsx") exportXLSX(); else if(t==="import") $("importFile").click();
+    if(t==="pdf") exportPDF(); else if(t==="pdfweek") openWeekPick(); else if(t==="csv") exportCSV(); else if(t==="xlsx") exportXLSX(); else if(t==="import") $("importFile").click();
     else if(t==="backup") exportBackup(); else if(t==="restore") $("backupFile").click(); });
   $("importFile").addEventListener("change",e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ importCSV(rd.result); $("importFile").value=""; }; rd.readAsText(f,"utf-8"); });
   $("backupFile").addEventListener("change",e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ restoreBackup(rd.result); $("backupFile").value=""; }; rd.readAsText(f,"utf-8"); });
@@ -1844,12 +1914,13 @@ function bind(){
   document.addEventListener("keydown",e=>{
     if(e.key==="Escape"){
       if($("appMenu").classList.contains("open")){ $("appMenu").classList.remove("open"); $("menuBtn").setAttribute("aria-expanded","false"); $("menuBtn").focus(); return; }
+      if(!$("weekPick").hidden) return closeWeekPick();
       if($("activity").classList.contains("show")) return closeActivity();
       if($("settings").classList.contains("show")) return closeSettings();
       if($("drawer").classList.contains("is-open")) return closeDrawer();
     }
     const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
-    const surfaceOpen=$("drawer").classList.contains("is-open")||$("settings").classList.contains("show")||$("activity").classList.contains("show")||!$("cc-login").hidden;
+    const surfaceOpen=$("drawer").classList.contains("is-open")||$("settings").classList.contains("show")||$("activity").classList.contains("show")||!$("cc-login").hidden||!$("weekPick").hidden;
     if(typing||surfaceOpen) return;
     if(e.key==="n"){ e.preventDefault(); openDrawer(null,null); }
     if(e.key==="ArrowLeft") navMonth("prev");
